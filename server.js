@@ -239,6 +239,26 @@ result+="❌ No code detected\\n"
 score=0
 }
 
+let indicators=["function","const","let","var","if(","for(","while(","{","}",";","=>"]
+
+let isCode=false
+
+indicators.forEach(k=>{
+if(code.includes(k)){
+isCode=true
+}
+})
+
+if(!isCode){
+result+="❌ Input does not appear to be valid code\\n"
+score=0
+}
+
+if(code.length<10){
+result+="❌ Code too short to analyze\\n"
+score=0
+}
+
 if(code.includes("var ")){
 result+="⚠ Avoid using var. Use let or const.\\n\\n"
 score-=1
