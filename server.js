@@ -1,10 +1,158 @@
-const http = require("node:http")
+const http=require("node:http")
 
-const server = http.createServer((req,res)=>{
+let users=[]
+let history=[]
+let count=0
+
+const server=http.createServer((req,res)=>{
+
+if(req.url==="/signup.html"){
+res.writeHead(200,{"Content-Type":"text/html"})
+res.end(`
+
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>Create Account</title>
+
+<style>
+
+body{
+font-family:Arial;
+background:#f7f3ed;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+margin:0;
+}
+
+.card{
+background:#fffdf9;
+padding:40px;
+border-radius:10px;
+width:340px;
+border:1px solid #e2d5c5;
+text-align:center;
+}
+
+h2{
+margin-bottom:20px;
+color:#3b3026;
+}
+
+input{
+width:100%;
+padding:12px;
+margin:10px 0;
+border:1px solid #dbcab6;
+border-radius:6px;
+background:#fdfaf6;
+}
+
+button{
+width:100%;
+padding:12px;
+background:#d6c2a8;
+border:none;
+border-radius:6px;
+font-weight:bold;
+cursor:pointer;
+}
+
+button:hover{
+background:#c7b095;
+}
+
+a{
+display:block;
+margin-top:15px;
+text-decoration:none;
+color:#6e5e4e;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="card">
+
+<h2>Create Account</h2>
+
+<input id="username" placeholder="Username">
+<input id="email" placeholder="Email">
+<input id="password" type="password" placeholder="Password">
+
+<button onclick="signup()">Create Account</button>
+
+<p id="msg"></p>
+
+<a href="/">Back</a>
+
+</div>
+
+<script>
+
+async function signup(){
+
+const data={
+username:document.getElementById("username").value,
+email:document.getElementById("email").value,
+password:document.getElementById("password").value
+}
+
+const res=await fetch("/signup",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify(data)
+})
+
+const result=await res.json()
+
+document.getElementById("msg").innerText=result.message
+
+}
+
+</script>
+
+</body>
+</html>
+
+`)
+return
+}
+
+if(req.url==="/signup" && req.method==="POST"){
+
+let body=""
+
+req.on("data",chunk=>{
+body+=chunk.toString()
+})
+
+req.on("end",()=>{
+
+const data=JSON.parse(body)
+
+users.push(data)
+
+res.writeHead(200,{"Content-Type":"application/json"})
+res.end(JSON.stringify({message:"Account created successfully"}))
+
+})
+
+return
+}
 
 res.writeHead(200,{"Content-Type":"text/html"})
 
-res.end(`<!DOCTYPE html>
+res.end(`
+
+<!DOCTYPE html>
 <html>
 
 <head>
@@ -20,7 +168,7 @@ box-sizing:border-box;
 }
 
 body{
-font-family:Arial, sans-serif;
+font-family:Arial;
 background:#f7f3ed;
 color:#3b3026;
 }
@@ -38,43 +186,65 @@ header h1{
 font-size:26px;
 }
 
-header span{
+header button{
+background:#d6c2a8;
+border:none;
+padding:10px 20px;
+border-radius:6px;
+font-weight:bold;
+cursor:pointer;
+}
+
+.container{
+display:flex;
+}
+
+.sidebar{
+width:220px;
+background:#efe5d8;
+padding:20px;
+min-height:calc(100vh - 80px);
+}
+
+.sidebar h3{
+margin-bottom:15px;
+}
+
+.sidebar ul{
+list-style:none;
+}
+
+.sidebar li{
+padding:8px 0;
+border-bottom:1px solid #d8c8b7;
 font-size:14px;
-color:#6e5e4e;
 }
 
-.hero{
-text-align:center;
-padding:40px;
-}
-
-.hero h2{
-font-size:28px;
-margin-bottom:10px;
-}
-
-.hero p{
-color:#6e5e4e;
+.sidebar button{
+margin-top:20px;
+width:100%;
+padding:10px;
+background:#d6c2a8;
+border:none;
+border-radius:6px;
+cursor:pointer;
 }
 
 .main{
+flex:1;
+padding:40px;
 display:grid;
 grid-template-columns:1fr 1fr;
-gap:20px;
-padding:40px;
+gap:25px;
 }
 
-.editor{
+.card{
 background:#fffdf9;
 border:1px solid #e2d5c5;
 border-radius:10px;
 padding:20px;
 display:flex;
 flex-direction:column;
-}
-
-.editor h3{
-margin-bottom:10px;
 }
 
 textarea{
@@ -84,83 +254,50 @@ background:#fdfaf6;
 padding:15px;
 font-family:monospace;
 font-size:14px;
-resize:none;
 border-radius:8px;
+resize:none;
 outline:none;
+margin-top:10px;
 }
 
-.controls{
+.analyze{
 margin-top:15px;
-display:flex;
-justify-content:space-between;
-align-items:center;
-}
-
-button{
 background:#d6c2a8;
 border:none;
-padding:12px 22px;
+padding:12px;
 border-radius:6px;
 font-weight:bold;
 cursor:pointer;
-transition:0.2s;
-}
-
-button:hover{
-transform:scale(1.05);
-background:#c8b094;
-}
-
-.stats{
-font-size:13px;
-color:#6e5e4e;
-}
-
-.results{
-background:#fffdf9;
-border:1px solid #e2d5c5;
-border-radius:10px;
-padding:20px;
-display:flex;
-flex-direction:column;
 }
 
 .output{
 background:#fdfaf6;
 padding:15px;
 border-radius:8px;
-white-space:pre-wrap;
 font-family:monospace;
+white-space:pre-wrap;
 min-height:200px;
+margin-top:10px;
 }
 
-.scorebar{
-margin-top:20px;
+.bar{
 height:14px;
 background:#ece3d7;
 border-radius:10px;
+margin-top:20px;
 overflow:hidden;
 }
 
-.scorefill{
+.fill{
 height:100%;
 width:0%;
 background:#c8b094;
 transition:0.4s;
 }
 
-.scoretext{
+.score{
 margin-top:10px;
 font-weight:bold;
-}
-
-footer{
-text-align:center;
-padding:15px;
-margin-top:30px;
-border-top:1px solid #e2d5c5;
-color:#7a6b5c;
-font-size:13px;
 }
 
 </style>
@@ -170,31 +307,40 @@ font-size:13px;
 <body>
 
 <header>
+
 <h1>CodeRefine AI</h1>
-<span>Generative Code Review Engine</span>
+
+<a href="/signup.html">
+<button>Create Account</button>
+</a>
+
 </header>
 
-<div class="hero">
-<h2>Smart Code Analysis for Developers</h2>
-<p>Paste your code and instantly detect bugs, security risks and improvements.</p>
+<div class="container">
+
+<div class="sidebar">
+
+<h3>History</h3>
+
+<ul id="historyList"></ul>
+
+<button onclick="newChat()">New Code</button>
+
 </div>
 
 <div class="main">
 
-<div class="editor">
+<div class="card">
 
 <h3>Code Editor</h3>
 
 <textarea id="code" placeholder="Paste your code here..."></textarea>
 
-<div class="controls">
-<button onclick="analyze()">Analyze Code</button>
-<div class="stats" id="stats">0 characters</div>
-</div>
+<button class="analyze" onclick="analyze()">Analyze Code</button>
 
 </div>
 
-<div class="results">
+<div class="card">
 
 <h3>Analysis Result</h3>
 
@@ -202,11 +348,11 @@ font-size:13px;
 Waiting for analysis...
 </div>
 
-<div class="scorebar">
-<div class="scorefill" id="bar"></div>
+<div class="bar">
+<div class="fill" id="bar"></div>
 </div>
 
-<div class="scoretext" id="score">
+<div class="score" id="score">
 Code Quality Score: -
 </div>
 
@@ -214,32 +360,21 @@ Code Quality Score: -
 
 </div>
 
-<footer>
-CodeRefine AI • Built for Hackathon Demo
-</footer>
+</div>
 
 <script>
 
-const textarea=document.getElementById("code")
-const stats=document.getElementById("stats")
-
-textarea.addEventListener("input",()=>{
-stats.innerText=textarea.value.length+" characters"
-})
+let history=[]
+let count=0
 
 function analyze(){
 
-const code=textarea.value
+const code=document.getElementById("code").value
 
 let result=""
 let score=10
 
-if(code.trim()===""){
-result+="❌ No code detected\\n"
-score=0
-}
-
-let indicators=["function","const","let","var","if(","for(","while(","{","}",";","=>"]
+const indicators=["function","const","let","var","if(","for(","while(","{","}",";","=>"]
 
 let isCode=false
 
@@ -248,6 +383,11 @@ if(code.includes(k)){
 isCode=true
 }
 })
+
+if(code.trim()===""){
+result+="❌ No code detected\\n"
+score=0
+}
 
 if(!isCode){
 result+="❌ Input does not appear to be valid code\\n"
@@ -260,7 +400,7 @@ score=0
 }
 
 if(code.includes("var ")){
-result+="⚠ Avoid using var. Use let or const.\\n\\n"
+result+="⚠ Avoid using var. Use let or const\\n\\n"
 score-=1
 }
 
@@ -282,25 +422,6 @@ result+="❌ Possible missing curly bracket }\\n\\n"
 score-=2
 }
 
-if(code.includes("for(") && code.split("for(").length>2){
-result+="⚠ Nested loops detected. Time complexity may increase.\\n\\n"
-score-=1
-}
-
-let lines=code.split("\\n")
-
-lines.forEach((line,index)=>{
-if(line.trim().length>0 &&
-!line.trim().endsWith(";") &&
-!line.includes("{") &&
-!line.includes("}") &&
-!line.includes("if") &&
-!line.includes("for") &&
-!line.includes("while")){
-result+="⚠ Possible missing semicolon at line "+(index+1)+"\\n\\n"
-}
-})
-
 if(score<0){
 score=0
 }
@@ -315,13 +436,47 @@ document.getElementById("score").innerText="Code Quality Score: "+score+"/10"
 let percent=score*10
 document.getElementById("bar").style.width=percent+"%"
 
+count++
+
+history.push("Code "+count)
+
+updateHistory()
+
+}
+
+function updateHistory(){
+
+const list=document.getElementById("historyList")
+
+list.innerHTML=""
+
+history.forEach(name=>{
+
+const li=document.createElement("li")
+
+li.innerText=name
+
+list.appendChild(li)
+
+})
+
+}
+
+function newChat(){
+
+document.getElementById("code").value=""
+document.getElementById("result").innerText="Waiting for analysis..."
+document.getElementById("score").innerText="Code Quality Score: -"
+document.getElementById("bar").style.width="0%"
+
 }
 
 </script>
 
 </body>
+</html>
 
-</html>`)
+`)
 
 })
 
